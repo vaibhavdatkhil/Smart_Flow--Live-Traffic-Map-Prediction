@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartFlow — Offline</title>
+<style>
+  body { background:#030712; color:#e2e8f0; font-family:'Exo 2',sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; text-align:center; }
+  .icon { font-size:64px; margin-bottom:16px; }
+  h1 { font-family:Rajdhani,sans-serif; font-size:28px; color:#00d4ff; letter-spacing:0.08em; margin:0 0 8px; }
+  p { color:#64748b; font-size:14px; max-width:300px; line-height:1.6; }
+  button { margin-top:20px; padding:12px 28px; border-radius:10px; border:1px solid rgba(0,212,255,0.4); background:rgba(0,212,255,0.1); color:#00d4ff; font-family:Rajdhani,sans-serif; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:0.08em; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="icon">📡</div>
+    <h1>YOU'RE OFFLINE</h1>
+    <p>No internet connection. SmartFlow needs internet to load live traffic data.</p>
+    <p style="margin-top:8px;color:#334155;font-size:12px;">Cached pages may still be available.</p>
+    <button onclick="window.location.reload()">🔄 TRY AGAIN</button>
+  </div>
+</body>
+</html>

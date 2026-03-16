@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --city-dark: #030712;
+  --city-panel: #0a0f1e;
+  --city-card: #0d1424;
+  --city-border: #1a2744;
+  --city-accent: #00d4ff;
+  --city-green: #00ff88;
+  --city-amber: #ffb800;
+  --city-red: #ff3b3b;
+  --city-purple: #7c3aed;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--city-dark);
+  color: #e2e8f0;
+  font-family: 'Exo 2', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--city-panel); }
+::-webkit-scrollbar-thumb { background: var(--city-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--city-accent); }
+
+/* Grid background */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glow effects */
+.glow-cyan { box-shadow: 0 0 20px rgba(0,212,255,0.3), 0 0 40px rgba(0,212,255,0.1); }
+.glow-green { box-shadow: 0 0 20px rgba(0,255,136,0.3), 0 0 40px rgba(0,255,136,0.1); }
+.glow-red { box-shadow: 0 0 20px rgba(255,59,59,0.3), 0 0 40px rgba(255,59,59,0.1); }
+.glow-amber { box-shadow: 0 0 20px rgba(255,184,0,0.3), 0 0 40px rgba(255,184,0,0.1); }
+
+/* Panel styling */
+.city-panel {
+  background: var(--city-panel);
+  border: 1px solid var(--city-border);
+  border-radius: 12px;
+}
+
+/* Text glow */
+.text-glow-cyan { text-shadow: 0 0 20px rgba(0,212,255,0.8); }
+.text-glow-green { text-shadow: 0 0 20px rgba(0,255,136,0.8); }
+
+/* Traffic light animation */
+@keyframes traffic-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+}
+
+.traffic-light-active {
+  animation: traffic-blink 1.5s ease-in-out infinite;
+}
+
+/* Scanning line */
+@keyframes scan-line {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--city-accent), transparent);
+  animation: scan-line 3s linear infinite;
+}
+
+/* Counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-anim { animation: count-up 0.6s ease-out; }
+
+/* Pulse ring */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Gradient text */
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #00d4ff, #0088ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-green {
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Nav link */
+.nav-link {
+  position: relative;
+  padding: 6px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0; height: 2px;
+  background: var(--city-accent);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* Card hover */
+.stat-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Input */
+.city-input {
+  background: rgba(10,15,30,0.9);
+  border: 1px solid var(--city-border);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Exo 2', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.city-input:focus {
+  outline: none;
+  border-color: var(--city-accent);
+  box-shadow: 0 0 0 2px rgba(0,212,255,0.15);
+}
+
+/* Select */
+.city-select {
+  background: rgba(10,15,30,0.9);
+  border: 1px solid var(--city-border);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Exo 2', sans-serif;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.city-select:focus {
+  outline: none;
+  border-color: var(--city-accent);
+}
+
+/* Button */
+.city-btn {
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,136,255,0.2));
+  border: 1px solid var(--city-accent);
+  color: var(--city-accent);
+  padding: 11px 28px;
+  border-radius: 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.city-btn:hover {
+  background: linear-gradient(135deg, rgba(0,212,255,0.35), rgba(0,136,255,0.35));
+  box-shadow: 0 0 20px rgba(0,212,255,0.4);
+  transform: translateY(-1px);
+}
+
+.city-btn:active {
+  transform: translateY(1px);
+}
+
+/* Map placeholder */
+.map-container {
+  background: #060d1f;
+  border: 1px solid var(--city-border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated dots */
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.blink-1 { animation: blink-dot 1.2s ease-in-out infinite; }
+.blink-2 { animation: blink-dot 1.2s ease-in-out infinite 0.4s; }
+.blink-3 { animation: blink-dot 1.2s ease-in-out infinite 0.8s; }
