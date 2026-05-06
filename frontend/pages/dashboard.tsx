@@ -1,267 +1,730 @@
+// pages/dashboard.tsx
+
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Head from 'next/head'
 import Navbar from '../components/Navbar'
+import CountUp from 'react-countup'
+import {
+  FiCloud,
+  FiAlertTriangle,
+  FiActivity
+} from 'react-icons/fi'
 
-const CITIES = ['Mumbai','Delhi','Pune','Bangalore','Chennai','Hyderabad','Kolkata','Ahmedabad']
-const COLORS = ['#00d4ff','#00ff88','#ffb800','#ff3b3b','#7c3aed','#06b6d4','#f97316','#ec4899']
-const LEVEL_COLOR: Record<string,string> = {Low:'#00ff88',Medium:'#ffb800',High:'#ff3b3b'}
+const CITIES = [
+  'Mumbai',
+  'Delhi',
+  'Pune',
+  'Bangalore',
+  'Chennai',
+  'Hyderabad',
+  'Kolkata',
+  'Ahmedabad'
+]
 
-function rnd(a:number,b:number){return Math.floor(Math.random()*(b-a+1))+a}
-function genLive(){
-  const h=new Date().getHours()
-  const peak=h>=7&&h<=9||h>=17&&h<=19
-  return CITIES.map((city,i)=>{
-    const base=[85,92,67,78,71,74,80,55][i]
-    const v=Math.floor(base*(peak?1.4:0.8)*(0.85+Math.random()*0.3))
-    return{city,vehicles:v,level:v<30?'Low':v<65?'Medium':'High',speed:Math.max(5,Math.floor(80-v*0.65))}
-  })
+const COLORS = [
+  '#00d4ff',
+  '#00ff88',
+  '#ffb800',
+  '#ff3b3b',
+  '#7c3aed',
+  '#06b6d4',
+  '#f97316',
+  '#ec4899'
+]
+
+const alerts = [
+  'Heavy traffic detected in Mumbai',
+  'AI predicts congestion in Delhi',
+  'Rain may affect Bangalore traffic',
+  'Traffic optimized successfully in Pune'
+]
+
+function rnd(a: number, b: number) {
+  return Math.floor(Math.random() * (b - a + 1)) + a
 }
 
-export default function Dashboard(){
-  const [junctions,setJunctions]=useState(genLive())
-  const [total,setTotal]=useState(0)
-  const [cong,setCong]=useState(0)
-  const [speed,setSpeed]=useState(0)
-  const hourlyRef=useRef<HTMLCanvasElement>(null)
-  const histRef=useRef<HTMLCanvasElement>(null)
-  const distRef=useRef<HTMLCanvasElement>(null)
-  const cityRef=useRef<HTMLCanvasElement>(null)
-  const chartsInit=useRef(false)
-  const chartInstances=useRef<any[]>([])
+function genLive() {
 
-  useEffect(()=>{
-    const j=genLive()
-    setJunctions(j)
-    setTotal(j.reduce((s,x)=>s+x.vehicles,0))
-    setCong(Math.floor(j.filter(x=>x.level==='High').length/j.length*100))
-    setSpeed(Math.floor(j.reduce((s,x)=>s+x.speed,0)/j.length))
-  },[])
+  const h = new Date().getHours()
 
-  useEffect(()=>{
-    const interval=setInterval(()=>{
-      const j=genLive()
+  const peak =
+    (h >= 7 && h <= 9) ||
+    (h >= 17 && h <= 19)
+
+  return CITIES.map((city, i) => {
+
+    const base = [85, 92, 67, 78, 71, 74, 80, 55][i]
+
+    const v = Math.floor(
+      base *
+      (peak ? 1.4 : 0.8) *
+      (0.85 + Math.random() * 0.3)
+    )
+
+    return {
+      city,
+      vehicles: v,
+      level:
+        v < 30
+          ? 'Low'
+          : v < 65
+          ? 'Medium'
+          : 'High',
+      speed: Math.max(5, Math.floor(80 - v * 0.65))
+    }
+
+  })
+
+}
+
+export default function Dashboard() {
+
+  const [junctions, setJunctions] = useState(genLive())
+  const [total, setTotal] = useState(0)
+  const [cong, setCong] = useState(0)
+  const [speed, setSpeed] = useState(0)
+  const [time, setTime] = useState(new Date())
+  const [alertIndex, setAlertIndex] = useState(0)
+
+  const hourlyRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+
+    const update = () => {
+
+      const j = genLive()
+
       setJunctions(j)
-      setTotal(j.reduce((s,x)=>s+x.vehicles,0))
-      setCong(Math.floor(j.filter(x=>x.level==='High').length/j.length*100))
-      setSpeed(Math.floor(j.reduce((s,x)=>s+x.speed,0)/j.length))
-    },5000)
-    return()=>clearInterval(interval)
-  },[])
 
-  useEffect(()=>{
-    if(chartsInit.current)return
-    const timer=setTimeout(()=>{
-      if(typeof window==='undefined')return
-      const Chart=(window as any).Chart
-      if(!Chart)return
-      chartsInit.current=true
+      setTotal(
+        j.reduce((s, x) => s + x.vehicles, 0)
+      )
 
-      // Destroy old
-      chartInstances.current.forEach(c=>c?.destroy())
-      chartInstances.current=[]
+      setCong(
+        Math.floor(
+          (j.filter(x => x.level === 'High').length / j.length) * 100
+        )
+      )
 
-      const hourly=Array.from({length:24},(_,h)=>{
-        const m=h>=7&&h<=9?2.8:h>=17&&h<=19?3.0:h<=4?0.3:1.2
-        return Math.floor(45*m+rnd(-8,8))
+      setSpeed(
+        Math.floor(
+          j.reduce((s, x) => s + x.speed, 0) / j.length
+        )
+      )
+
+      setTime(new Date())
+
+    }
+
+    update()
+
+    const interval = setInterval(update, 5000)
+
+    return () => clearInterval(interval)
+
+  }, [])
+
+  useEffect(() => {
+
+    const alertTimer = setInterval(() => {
+
+      setAlertIndex(prev => (prev + 1) % alerts.length)
+
+    }, 4000)
+
+    return () => clearInterval(alertTimer)
+
+  }, [])
+
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+
+      if (typeof window === 'undefined') return
+
+      const Chart = (window as any).Chart
+
+      if (!Chart) return
+
+      const hourly = Array.from({ length: 24 }, (_, h) => {
+
+        const m =
+          h >= 7 && h <= 9
+            ? 2.8
+            : h >= 17 && h <= 19
+            ? 3.0
+            : h <= 4
+            ? 0.3
+            : 1.2
+
+        return Math.floor(45 * m + rnd(-8, 8))
+
       })
 
-      if(hourlyRef.current){
-        const c=new Chart(hourlyRef.current,{
-          type:'line',
-          data:{labels:Array.from({length:24},(_,h)=>h+'h'),datasets:[{label:'Vehicles',data:hourly,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.08)',borderWidth:2,fill:true,tension:0.4,pointRadius:0}]},
-          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10}}}}}
-        })
-        chartInstances.current.push(c)
-      }
-
-      const hist=Array.from({length:24},(_,i)=>{
-        const h=(new Date().getHours()-23+i+24)%24
-        return Math.floor((h>=7&&h<=9?85:h>=17&&h<=19?95:h<=4?8:40)+rnd(-10,10))
+      new Chart(hourlyRef.current, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: 24 }, (_, h) => h + 'h'),
+          datasets: [
+            {
+              label: 'Vehicles',
+              data: hourly,
+              borderColor: '#00d4ff',
+              backgroundColor: 'rgba(0,212,255,0.08)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          }
+        }
       })
-      if(histRef.current){
-        const c=new Chart(histRef.current,{
-          type:'line',
-          data:{labels:Array.from({length:24},(_,i)=>((new Date().getHours()-23+i+24)%24)+'h'),datasets:[{label:'Vehicles',data:hist,borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.05)',borderWidth:2,fill:true,tension:0.3,pointRadius:0}]},
-          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10},maxTicksLimit:8}},y:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10}}}}}
-        })
-        chartInstances.current.push(c)
-      }
 
-      if(distRef.current){
-        const c=new Chart(distRef.current,{
-          type:'doughnut',
-          data:{labels:['Cars','Bikes','Trucks','Buses'],datasets:[{data:[45,28,15,12],backgroundColor:['#00d4ff','#00ff88','#ffb800','#ff3b3b'],borderWidth:0,spacing:2}]},
-          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}
-        })
-        chartInstances.current.push(c)
-      }
+    }, 300)
 
-      const cityVehicles=CITIES.map((_,i)=>{
-        const base=[85,92,67,78,71,74,80,55][i]
-        const h=new Date().getHours()
-        const peak=h>=7&&h<=9||h>=17&&h<=19
-        return Math.floor(base*(peak?1.3:0.8))
-      })
-      if(cityRef.current){
-        const c=new Chart(cityRef.current,{
-          type:'bar',
-          data:{labels:CITIES,datasets:[{label:'Vehicles',data:cityVehicles,backgroundColor:COLORS,borderWidth:0,borderRadius:4}]},
-          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10}}},y:{grid:{color:'rgba(26,39,68,0.5)'},ticks:{color:'#475569',font:{size:10}}}}}
-        })
-        chartInstances.current.push(c)
-      }
-    },300)
-    return()=>clearTimeout(timer)
-  },[])
+    return () => clearTimeout(timer)
 
-  const S=(props:any)=>(
-    <div style={{background:'#0a0f1e',border:`1px solid ${props.color}25`,borderRadius:12,padding:'14px 16px',position:'relative',overflow:'hidden'}}>
-      <div style={{position:'absolute',top:-20,right:-20,width:60,height:60,borderRadius:'50%',background:props.color,filter:'blur(20px)',opacity:0.12}}/>
-      <div style={{fontFamily:'Rajdhani,sans-serif',fontSize:11,letterSpacing:'0.1em',color:'#64748b',textTransform:'uppercase',marginBottom:4}}>{props.label}</div>
-      <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:26,color:props.color}}>{props.value}</div>
-      {props.sub&&<div style={{fontSize:11,color:'#475569',marginTop:2}}>{props.sub}</div>}
-    </div>
+  }, [])
+
+  const StatCard = ({ label, value, color, sub }: any) => (
+
+    <motion.div
+      whileHover={{
+        y: -8,
+        scale: 1.02,
+        boxShadow: `0 0 30px ${color}40`
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 300
+      }}
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(20px)',
+        border: `1px solid ${color}25`,
+        borderRadius: 20,
+        padding: '18px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+
+      <div style={{
+        position: 'absolute',
+        top: -20,
+        right: -20,
+        width: 90,
+        height: 90,
+        borderRadius: '50%',
+        background: color,
+        filter: 'blur(40px)',
+        opacity: 0.18
+      }} />
+
+      <div style={{
+        color: '#64748b',
+        fontSize: 12,
+        marginBottom: 6,
+        letterSpacing: '0.08em'
+      }}>
+        {label}
+      </div>
+
+      <div style={{
+        color,
+        fontSize: 32,
+        fontWeight: 700
+      }}>
+        <CountUp
+          end={Number(value)}
+          duration={2}
+        />
+      </div>
+
+      <div style={{
+        color: '#94a3b8',
+        fontSize: 12,
+        marginTop: 4
+      }}>
+        {sub}
+      </div>
+
+    </motion.div>
+
   )
 
-  return(
+  return (
+
     <>
+
       <Head>
-        <title>SmartFlow — Dashboard</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" async/>
+
+        <title>SmartFlow AI Dashboard</title>
+
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
+          async
+        />
+
       </Head>
-      <div style={{minHeight:'100vh',background:'#030712',paddingTop:56,fontFamily:'Exo 2,sans-serif',backgroundImage:'linear-gradient(rgba(0,212,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03)1px,transparent 1px)',backgroundSize:'40px 40px'}}>
-        <Navbar/>
-        <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{maxWidth:1280,margin:'0 auto',padding:'24px 20px'}}>
+
+      <div style={{
+        minHeight: '100vh',
+        background: '#030712',
+        color: '#fff',
+        paddingTop: 60,
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+
+        {/* Animated background */}
+
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background:
+            `
+            radial-gradient(circle at 20% 20%, rgba(0,212,255,0.12), transparent 25%),
+            radial-gradient(circle at 80% 30%, rgba(124,58,237,0.12), transparent 25%),
+            radial-gradient(circle at 50% 80%, rgba(0,255,136,0.08), transparent 30%)
+            `,
+          animation: 'moveBg 12s infinite alternate',
+          zIndex: 0
+        }} />
+
+        <Navbar />
+
+        <div style={{
+          maxWidth: 1350,
+          margin: '0 auto',
+          padding: '24px',
+          position: 'relative',
+          zIndex: 2
+        }}>
 
           {/* Header */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
+
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 20,
+              marginBottom: 20
+            }}
+          >
+
             <div>
-              <h1 style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:28,color:'#e2e8f0',letterSpacing:'0.06em',margin:0}}>SMART CITY DASHBOARD</h1>
-              <p style={{color:'#64748b',fontSize:13,margin:'4px 0 0'}}>Real-time traffic analytics and AI predictions</p>
+
+              <h1 style={{
+                fontSize: 36,
+                margin: 0,
+                fontWeight: 800,
+                letterSpacing: '0.08em'
+              }}>
+                SMARTFLOW AI CONTROL CENTER
+              </h1>
+
+              <p style={{
+                color: '#94a3b8'
+              }}>
+                Real-time Smart Traffic Monitoring
+              </p>
+
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:6,background:'rgba(0,255,136,0.07)',border:'1px solid rgba(0,255,136,0.2)'}}>
-              <div style={{width:7,height:7,borderRadius:'50%',background:'#00ff88',animation:'blink 1.4s infinite'}}/>
-              <span style={{fontFamily:'monospace',fontSize:11,color:'#00ff88'}}>AUTO-UPDATING</span>
+
+            <div style={{
+              display: 'flex',
+              gap: 16,
+              flexWrap: 'wrap'
+            }}>
+
+              {/* Clock */}
+
+              <div style={{
+                padding: '14px 18px',
+                borderRadius: 16,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(20px)'
+              }}>
+
+                <div style={{
+                  color: '#64748b',
+                  fontSize: 11
+                }}>
+                  LIVE TIME
+                </div>
+
+                <div style={{
+                  color: '#00d4ff',
+                  fontSize: 24,
+                  fontFamily: 'monospace'
+                }}>
+                  {time.toLocaleTimeString()}
+                </div>
+
+              </div>
+
+              {/* Weather */}
+
+              <div style={{
+                padding: '14px 18px',
+                borderRadius: 16,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10
+              }}>
+
+                <FiCloud size={26} color="#00d4ff" />
+
+                <div>
+                  <div style={{ fontWeight: 700 }}>
+                    29°C
+                  </div>
+
+                  <div style={{
+                    fontSize: 12,
+                    color: '#94a3b8'
+                  }}>
+                    Clear Sky
+                  </div>
+                </div>
+
+              </div>
+
             </div>
-          </div>
+
+          </motion.div>
+
+          {/* Alert */}
+
+          <motion.div
+            key={alertIndex}
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{
+              marginBottom: 22,
+              padding: '14px 18px',
+              borderRadius: 16,
+              background:
+                'linear-gradient(90deg, rgba(255,59,59,0.15), rgba(255,184,0,0.08))',
+              border: '1px solid rgba(255,59,59,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12
+            }}
+          >
+
+            <FiAlertTriangle color="#ffb800" size={22} />
+
+            <span>
+              {alerts[alertIndex]}
+            </span>
+
+          </motion.div>
 
           {/* Stats */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-            <S label="Live Vehicles" value={total.toLocaleString()} color="#00d4ff" sub="↑ 8% vs yesterday"/>
-            <S label="Congestion" value={cong+'%'} color={cong>60?'#ff3b3b':'#ffb800'} sub="↓ 3% vs yesterday"/>
-            <S label="Avg Speed" value={speed+' km/h'} color="#00ff88" sub="↑ 5% vs yesterday"/>
-            <S label="AI Accuracy" value="89%" color="#7c3aed" sub="RandomForest model"/>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))',
+            gap: 16,
+            marginBottom: 24
+          }}>
+
+            <StatCard
+              label="LIVE VEHICLES"
+              value={total}
+              color="#00d4ff"
+              sub="↑ 8% vs yesterday"
+            />
+
+            <StatCard
+              label="CONGESTION"
+              value={cong}
+              color="#ff3b3b"
+              sub="AI monitored"
+            />
+
+            <StatCard
+              label="AVG SPEED"
+              value={speed}
+              color="#00ff88"
+              sub="Traffic optimized"
+            />
+
+            <StatCard
+              label="AI ACCURACY"
+              value={89}
+              color="#7c3aed"
+              sub="RandomForest Model"
+            />
+
           </div>
 
-          {/* Charts row 1 */}
-          <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr',gap:16,marginBottom:16}}>
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:3,height:14,borderRadius:2,background:'#00d4ff',display:'inline-block'}}/>24-HOUR TRAFFIC VOLUME
+          {/* Charts */}
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: 20,
+            marginBottom: 24
+          }}>
+
+            {/* Traffic Chart */}
+
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 22,
+                padding: 24,
+                backdropFilter: 'blur(20px)'
+              }}
+            >
+
+              <div style={{
+                marginBottom: 18,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10
+              }}>
+
+                <FiActivity color="#00d4ff" />
+
+                <h3 style={{
+                  margin: 0
+                }}>
+                  24-Hour Traffic Volume
+                </h3>
+
               </div>
-              <div style={{position:'relative',height:200}}><canvas ref={hourlyRef}/></div>
-            </div>
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:3,height:14,borderRadius:2,background:'#ffb800',display:'inline-block'}}/>CITY CONGESTION
+
+              <div style={{
+                height: 320
+              }}>
+                <canvas ref={hourlyRef} />
               </div>
-              {junctions.map((j,i)=>(
-                <div key={j.city} style={{marginBottom:10}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}>
-                    <span style={{color:'#94a3b8'}}>{j.city}</span>
-                    <span style={{color:COLORS[i%COLORS.length],fontFamily:'monospace'}}>{j.vehicles}v/hr</span>
-                  </div>
-                  <div style={{height:5,borderRadius:3,background:'#1a2744'}}>
-                    <motion.div initial={{width:0}} animate={{width:`${Math.min(100,j.vehicles)}%`}} transition={{duration:0.8,delay:i*0.05}} style={{height:'100%',borderRadius:3,background:COLORS[i%COLORS.length]}}/>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+            </motion.div>
+
+            {/* AI Prediction */}
+
+            <motion.div
+              whileHover={{
+                scale: 1.03
+              }}
+              style={{
+                background:
+                  'linear-gradient(135deg,#111827,#0f172a)',
+                border:
+                  '1px solid rgba(124,58,237,0.3)',
+                borderRadius: 22,
+                padding: 24
+              }}
+            >
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                marginBottom: 20
+              }}>
+
+                <FiActivity
+                  color="#7c3aed"
+                  size={24}
+                />
+
+                <h3 style={{
+                  margin: 0
+                }}>
+                  AI Prediction Engine
+                </h3>
+
+              </div>
+
+              <p style={{
+                color: '#94a3b8',
+                lineHeight: 1.7
+              }}>
+                AI predicts 34% traffic increase
+                in Mumbai within next 2 hours.
+              </p>
+
+              <div style={{
+                marginTop: 18,
+                height: 10,
+                borderRadius: 20,
+                background: '#1e293b'
+              }}>
+
+                <div style={{
+                  width: '78%',
+                  height: '100%',
+                  borderRadius: 20,
+                  background:
+                    'linear-gradient(90deg,#7c3aed,#00d4ff)'
+                }} />
+
+              </div>
+
+            </motion.div>
+
           </div>
 
-          {/* Charts row 2 */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:3,height:14,borderRadius:2,background:'#00ff88',display:'inline-block'}}/>TRAFFIC HISTORY (24h)
-              </div>
-              <div style={{position:'relative',height:180}}><canvas ref={histRef}/></div>
-            </div>
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:3,height:14,borderRadius:2,background:'#7c3aed',display:'inline-block'}}/>VEHICLES BY CITY
-              </div>
-              <div style={{position:'relative',height:180}}><canvas ref={cityRef}/></div>
-            </div>
-          </div>
+          {/* Live Junction Table */}
 
-          {/* Vehicle distribution + table */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 2fr',gap:16,marginBottom:16}}>
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-                <span style={{width:3,height:14,borderRadius:2,background:'#ff3b3b',display:'inline-block'}}/>VEHICLE TYPES
-              </div>
-              <div style={{position:'relative',height:160}}><canvas ref={distRef}/></div>
-              <div style={{display:'flex',flexDirection:'column',gap:6,marginTop:12}}>
-                {[['Cars','45%','#00d4ff'],['Bikes','28%','#00ff88'],['Trucks','15%','#ffb800'],['Buses','12%','#ff3b3b']].map(([l,v,c])=>(
-                  <div key={l} style={{display:'flex',alignItems:'center',gap:8,fontSize:12}}>
-                    <span style={{width:9,height:9,borderRadius:2,background:c,flexShrink:0}}/>
-                    <span style={{color:'#64748b',flex:1}}>{l}</span>
-                    <span style={{color:'#94a3b8',fontFamily:'monospace'}}>{v}</span>
-                  </div>
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 22,
+            padding: 24,
+            backdropFilter: 'blur(20px)'
+          }}>
+
+            <h3 style={{
+              marginTop: 0,
+              marginBottom: 18
+            }}>
+              LIVE JUNCTION STATUS
+            </h3>
+
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse'
+            }}>
+
+              <thead>
+
+                <tr>
+
+                  {[
+                    'City',
+                    'Vehicles/hr',
+                    'Speed',
+                    'Status'
+                  ].map(h => (
+
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: 'left',
+                        padding: 12,
+                        color: '#64748b'
+                      }}
+                    >
+                      {h}
+                    </th>
+
+                  ))}
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {junctions.map((j, i) => (
+
+                  <motion.tr
+                    key={j.city}
+                    whileHover={{
+                      background:
+                        'rgba(255,255,255,0.03)'
+                    }}
+                  >
+
+                    <td style={{
+                      padding: 14
+                    }}>
+                      {j.city}
+                    </td>
+
+                    <td style={{
+                      padding: 14
+                    }}>
+                      {j.vehicles}
+                    </td>
+
+                    <td style={{
+                      padding: 14
+                    }}>
+                      {j.speed} km/h
+                    </td>
+
+                    <td style={{
+                      padding: 14
+                    }}>
+
+                      <span style={{
+                        padding: '4px 10px',
+                        borderRadius: 8,
+                        background:
+                          j.level === 'High'
+                            ? 'rgba(255,59,59,0.18)'
+                            : j.level === 'Medium'
+                            ? 'rgba(255,184,0,0.18)'
+                            : 'rgba(0,255,136,0.18)',
+                        color:
+                          j.level === 'High'
+                            ? '#ff3b3b'
+                            : j.level === 'Medium'
+                            ? '#ffb800'
+                            : '#00ff88'
+                      }}>
+                        {j.level}
+                      </span>
+
+                    </td>
+
+                  </motion.tr>
+
                 ))}
-              </div>
-            </div>
 
-            {/* Live table */}
-            <div style={{background:'#0a0f1e',border:'1px solid #1a2744',borderRadius:12,padding:18}}>
-              <div style={{fontFamily:'Rajdhani,sans-serif',fontWeight:700,fontSize:14,color:'#94a3b8',letterSpacing:'0.1em',marginBottom:14,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{width:3,height:14,borderRadius:2,background:'#00d4ff',display:'inline-block'}}/>LIVE JUNCTION STATUS
-                </div>
-                <div style={{display:'flex',alignItems:'center',gap:5}}>
-                  <div style={{width:7,height:7,borderRadius:'50%',background:'#00ff88',animation:'blink 1.4s infinite'}}/>
-                  <span style={{fontSize:11,color:'#00ff88',fontFamily:'monospace'}}>UPDATING</span>
-                </div>
-              </div>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-                  <thead>
-                    <tr style={{borderBottom:'1px solid #1a2744'}}>
-                      {['City','Vehicles/hr','Speed','Status','Trend'].map(h=>(
-                        <th key={h} style={{textAlign:'left',padding:'6px 10px',fontFamily:'Rajdhani,sans-serif',fontSize:11,letterSpacing:'0.06em',color:'#475569',fontWeight:600,textTransform:'uppercase'}}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {junctions.map((j,i)=>{
-                      const c=LEVEL_COLOR[j.level]
-                      return(
-                        <tr key={j.city} style={{borderBottom:'1px solid rgba(26,39,68,0.4)'}}>
-                          <td style={{padding:'8px 10px'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:8}}>
-                              <div style={{width:8,height:8,borderRadius:'50%',background:c,boxShadow:`0 0 5px ${c}`}}/>
-                              <span style={{color:'#e2e8f0'}}>{j.city}</span>
-                            </div>
-                          </td>
-                          <td style={{padding:'8px 10px',color:'#94a3b8',fontFamily:'monospace'}}>{j.vehicles}</td>
-                          <td style={{padding:'8px 10px',color:'#64748b'}}>{j.speed} km/h</td>
-                          <td style={{padding:'8px 10px'}}>
-                            <span style={{padding:'2px 8px',borderRadius:4,background:`${c}18`,color:c,border:`1px solid ${c}35`,fontFamily:'Rajdhani,sans-serif',fontSize:11,fontWeight:700,letterSpacing:'0.04em'}}>{j.level.toUpperCase()}</span>
-                          </td>
-                          <td style={{padding:'8px 10px',fontSize:18,color:i%2===0?'#00ff88':'#ff3b3b'}}>{i%2===0?'↑':'↓'}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+              </tbody>
+
+            </table>
+
           </div>
-        </motion.div>
+
+        </div>
+
+        <style>{`
+
+          @keyframes moveBg {
+
+            0% {
+              transform: translateY(0px)
+            }
+
+            100% {
+              transform: translateY(-40px)
+            }
+
+          }
+
+        `}</style>
+
       </div>
-      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+
     </>
+
   )
+
 }
