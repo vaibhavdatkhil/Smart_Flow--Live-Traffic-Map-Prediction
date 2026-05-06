@@ -1,4 +1,4 @@
-// pages/dashboard.tsx
+// pages/dashboard.tsx and pages layout
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
